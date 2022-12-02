@@ -1,0 +1,98 @@
+#include<stdio.h>
+#include<math.h>
+
+int InputPin_1 = A0;
+int InputPin_2 = A1;
+const double gamma = 0.3;
+const double step_time = 1;
+double x1 = 3, x2 = 2, x3 = 3, y1 = 3, y2 = 2.5, y3 = 2;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(InputPin_1, INPUT); 
+  pinMode(InputPin_2, INPUT);
+  pinMode(5,OUTPUT);
+  pinMode(6,OUTPUT);
+  Serial.println("CLEARDATA");
+  Serial.println("LABEL,x1,y1,x2,y2,x3,y3");
+  Serial.println("RESSETTIMER"); 
+}
+
+double f(double p1, double p2, double p3, double N, double u){
+    return N + u*p1 + gamma*(p2 + p3);
+}
+//  double RK1(double f(double x, double y), double x0, double y0, double x, double h){ \\Runge-Kutta Integration
+//      double y,k1,k2;
+//      while(fabs(x-x0)>0.0000000001){
+//          k1=h*f(x0,y0);
+//          k2=h*f(x0+h/2.0,y0+k1/2.0);
+//          y=y0+k2;
+//          y0=y;
+//          x0=x0+h;
+//      }
+//      return y;
+//  }
+//   
+//  double RK2(double f(double x, double y), double x0, double y0, double x, double h){
+//      double y,k1,k2,k3,k4;
+//      while(fabs(x-x0)>0.0000000001){
+//          k1=h*f(x0,y0);
+//          k2=h*f(x0+h/2.0,y0+k1/2.0);
+//          k3=h*f(x0+h/2.0,y0+k2/2.0);
+//          k4=h*f(x0+h,y0+k3);
+//          y=y0+1/6.0*(k1+2*k2+2*k3+k4);
+//          y0=y;
+//          x0=x0+h;
+//      }
+//      return y;
+double euler(double p1, double p2, double p3, double N, double u){  \\Euler integration
+    if (p1 > 4.99)
+      {p1=-4.5 + step_time*f(p1, p2, p3, N, u);}
+    else if (p1 < -4.99)
+      {p1=4.5 +step_time*f(p1, p2, p3, N, u);}
+    else
+      {p1=p1+step_time*f(p1, p2, p3, N, u);}
+    return p1;
+}
+
+double fullupdate(double p1, double p2, double p3){
+  int N1=analogRead(InputPin_1);
+  int u1=analogRead(InputPin_2);
+  double N = -1+(N1*2/1024);
+  double u =-0.1+(u1/1024);
+  p1=euler(p1,p2,p3,N,u);
+  return p1;
+  
+}
+void loop() {
+  Serial.print("DATA,");
+  \\Serial.println("x1");
+  \\Serial.println(255*(x1+5)/10);
+  \\Serial.println("y1");
+  \\Serial.println(255*(y1+5)/10);
+  x1=fullupdate(x1,x2,x3);
+  delay(20);
+  x2=fullupdate(x2,x3,x1);
+  delay(20);
+  x3=fullupdate(x3,x1,x2);
+  delay(20);
+  y1=fullupdate(y1,y2,y3);
+  delay(20);
+  y2=fullupdate(y2,y3,y1);
+  delay(20);
+  y3=fullupdate(y3,y1,y2);
+  analogWrite(5,255*(x1+5)/10); \\ give PWM output
+  analogWrite(6,255*(y1+5)/10);
+  Serial.print(x1); \\Write to excel
+  Serial.print(",");
+  Serial.print(y1);
+  Serial.print(",");
+  Serial.print(x2);
+  Serial.print(",");
+  Serial.print(y2);
+  Serial.print(",");
+  Serial.print(x3);
+  Serial.print(",");
+  Serial.print(y3);
+  Serial.println("");
+}
