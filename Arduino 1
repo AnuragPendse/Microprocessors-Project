@@ -1,0 +1,41 @@
+int x1;
+int x2;
+int x3;
+int x4;
+int x5;
+int x;
+int y=0;
+int alph1;
+int alph;
+int eta;
+void setup() {
+  Serial.begin(9600);
+  pinMode(5,OUTPUT);
+  pinMode(6,OUTPUT);
+
+}
+
+void loop() {
+  alph1=unigen();
+  alph=int(alph1*y/1023);
+  eta=gaussiangen();
+  analogWrite(5,eta);
+  analogWrite(6,alph1);
+  Serial.println(eta);
+  delay(100);
+}
+
+int gaussiangen(){      \\Gaussian Noise(eta)
+  x1=random(0,256);
+  x2=random(0,256);
+  x3=random(0,256);
+  x4=random(0,256);
+  x5=random(0,256);
+  x=int((x1+x2+x3+x4+x5)/5);
+  return x ;
+}
+
+int unigen(){   \\Noise to be used added to alpha
+  int x1=random(0,256)
+  return x1;
+}
